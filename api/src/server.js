@@ -1,9 +1,12 @@
 require("express-async-errors");
 
-const AppError = require("./utils/AppError");
-const express = require("express");
+const migrationsRun = require("./database/sqlite/migrations");
 
+const AppError = require("./utils/AppError");
+
+const express = require("express");
 const routes = require("./routes"); //como nao diz qual arquivo em especifico queremos da pasta, ele automaticamente busca pelo index.js
+migrationsRun();
 
 const app = express();
 app.use(express.json()); // Dizendo pro node que o app vai usar json para receber parâmetros
