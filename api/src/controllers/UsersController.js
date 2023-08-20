@@ -8,7 +8,7 @@
    * delete - DELETE para remover um registro.
    */
 
-const { hash } = require("bcryptjs");
+const { hash, compare } = require("bcryptjs");
 
 const AppError = require("../utils/AppError");
 const sqliteConnection = require("../database/sqlite");
@@ -32,7 +32,7 @@ class UsersController {
   }
 
   async update(request, response) {
-    const { name, email } = request.body;
+    const { name, email, password, old_password } = request.body;
     const { id } = request.params;
 
     const database = await sqliteConnection();
@@ -51,7 +51,21 @@ class UsersController {
     user.name = name;
     user.email = email;
 
-    await database.run(`UPDATE users SET name = ?, email = ?,updated_at = ? WHERE id = ?`, [user.name, user.email, new Date(), id]);
+    if(password && !old_password){
+      throw new AppError ("voce precisa informar a senha antiga");
+    }
+    
+    if(password && old_password){
+      const checkOldPassword = await compare(old_password, user.password);
+
+      if(!checkOldPassword) {
+        throw new AppError("A senha antiga nao confere.");
+      }
+
+      user.password = await hash(password, 8);
+    }
+
+    await database.run(`UPDATE users SET name = ?, email = ?, password = ?, updated_at = ? WHERE id = ?`, [user.name, user.email, user.password, new Date(), id]);
 
     return response.status(200).json();
   }
