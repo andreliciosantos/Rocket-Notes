@@ -10,7 +10,7 @@ module.exports = {
     },
     pool: {
       afterCreate: (conn, cb) => conn.run("PRAGMA foreign_keys = ON", cb)
-    },
+    }, // esse pool serve para habilitar a exclusão em cascata
     migrations: {
       directory: path.resolve(__dirname,"src", "database", "knex", "migrations")
     },
