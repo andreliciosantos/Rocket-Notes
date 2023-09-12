@@ -56,11 +56,31 @@ class NotesController {
   }
 
   async index(request, response){
-    const { title, user_id } = request.query;
-    const notes = await knex("notes")
-    .where({ user_id })
-    .whereLike("title", `%${title}%`) //usando % antes e depois da palavra o banco de dados verifica se ela existe em qualquer parte to titulo
-    .orderBy("title");
+    const { title, user_id, tags } = request.query;
+
+    let notes;
+    
+    if(tags){
+      const filterTags = tags.split(',').map(tag => tag.trim());
+
+      notes = await knex("tags")
+      .select([
+        "notes.id",
+        "notes.title",
+        "notes.user_id",
+      ])
+      .where("notes.user_id", user_id)
+      .whereLike("notes.title", `%${title}%`) //remover pra deixar a pesquisa apenas por tags
+      .whereIn("name", filterTags)
+      .innerJoin("notes", "notes.id", "tags.note_id")
+      .orderBy("notes.title")
+     
+    }else {
+      notes = await knex("notes")
+      .where({ user_id })
+      .whereLike("title", `%${title}%`) //usando % antes e depois da palavra o banco de dados verifica se ela existe em qualquer parte to titulo
+      .orderBy("title");
+    }
 
     return response.json({ notes });
   }
